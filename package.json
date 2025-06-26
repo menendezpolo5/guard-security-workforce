@@ -1,0 +1,61 @@
+{
+  "name": "bahinlink-security-management",
+  "version": "1.0.0",
+  "description": "Comprehensive security workforce management platform",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:admin\" \"npm run dev:client\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:admin": "cd admin-portal && npm start",
+    "dev:client": "cd client-portal && npm start",
+    "build": "npm run build:backend && npm run build:admin && npm run build:client",
+    "build:backend": "cd backend && npm run build",
+    "build:admin": "cd admin-portal && npm run build",
+    "build:client": "cd client-portal && npm run build",
+    "test": "npm run test:backend && npm run test:admin && npm run test:client",
+    "test:backend": "cd backend && npm test",
+    "test:admin": "cd admin-portal && npm test",
+    "test:client": "cd client-portal && npm test",
+    "lint": "npm run lint:backend && npm run lint:admin && npm run lint:client",
+    "lint:backend": "cd backend && npm run lint",
+    "lint:admin": "cd admin-portal && npm run lint",
+    "lint:client": "cd client-portal && npm run lint",
+    "install:all": "npm install && cd backend && npm install && cd ../admin-portal && npm install && cd ../client-portal && npm install",
+    "db:migrate": "cd backend && npx prisma migrate dev",
+    "db:seed": "cd backend && npx prisma db seed",
+    "db:setup": "npm run db:migrate && npm run db:seed",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:build": "docker-compose build",
+    "k8s:deploy": "kubectl apply -f k8s/",
+    "k8s:delete": "kubectl delete -f k8s/"
+  },
+  "keywords": [
+    "security",
+    "workforce",
+    "management",
+    "react",
+    "nodejs",
+    "typescript",
+    "prisma",
+    "postgresql"
+  ],
+  "author": "BahinLink Security",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "@types/node": "^20.10.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/menendezpolo5/guard-security-workforce.git"
+  },
+  "bugs": {
+    "url": "https://github.com/menendezpolo5/guard-security-workforce/issues"
+  },
+  "homepage": "https://github.com/menendezpolo5/guard-security-workforce#readme"
+}
