@@ -1,0 +1,287 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum UserRole {
+  ADMIN
+  SUPERVISOR
+  AGENT
+  CLIENT
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING
+}
+
+enum AgentStatus {
+  ACTIVE
+  INACTIVE
+  ON_LEAVE
+  TERMINATED
+}
+
+enum ClientStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  TERMINATED
+}
+
+enum SiteStatus {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+  CLOSED
+}
+
+enum ShiftType {
+  REGULAR
+  OVERTIME
+  EMERGENCY
+  TRAINING
+}
+
+enum ShiftStatus {
+  SCHEDULED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum AttendanceMethod {
+  GPS
+  QR_CODE
+  MANUAL
+  NFC
+}
+
+enum AttendanceStatus {
+  CLOCKED_IN
+  ON_BREAK
+  CLOCKED_OUT
+  INCOMPLETE
+}
+
+enum ReportType {
+  PATROL
+  INCIDENT
+  INSPECTION
+  MAINTENANCE
+  EMERGENCY
+}
+
+enum ReportStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  ARCHIVED
+}
+
+enum ReportPriority {
+  LOW
+  NORMAL
+  HIGH
+  CRITICAL
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  AUDIO
+  DOCUMENT
+}
+
+enum NotificationType {
+  MAINTENANCE
+  TRAINING
+  SYSTEM
+  SECURITY
+  INCIDENT
+  SHIFT
+  BILLING
+  INFO
+  WARNING
+  URGENT
+  EMERGENCY
+}
+
+enum NotificationChannel {
+  PUSH
+  EMAIL
+  SMS
+  IN_APP
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  DELIVERED
+  FAILED
+  READ
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  VIDEO
+  LOCATION
+  FILE
+}
+
+enum MessagePriority {
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum MessageStatus {
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+enum RequestType {
+  ADDITIONAL_PATROL
+  EMERGENCY_RESPONSE
+  MAINTENANCE
+  CONSULTATION
+  OTHER
+}
+
+enum RequestPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum RequestStatus {
+  OPEN
+  ASSIGNED
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+  CANCELLED
+}
+
+enum TimeOffType {
+  VACATION
+  SICK
+  PERSONAL
+  EMERGENCY
+  BEREAVEMENT
+  JURY_DUTY
+  MILITARY
+  OTHER
+}
+
+enum TimeOffStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum AssignmentMethod {
+  MANUAL
+  AUTO
+  INTELLIGENT_AUTO
+  EMERGENCY_AUTO
+}
+
+enum Priority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+  CRITICAL
+}
+
+// Core Models
+model User {
+  id                  String    @id @default(uuid())
+  username            String    @unique
+  email               String    @unique
+  passwordHash        String    @map("password_hash")
+  role                UserRole
+  status              UserStatus @default(ACTIVE)
+  profile             Json      @default("{}")
+  preferences         Json      @default("{}")
+  lastLoginAt         DateTime? @map("last_login_at")
+  passwordChangedAt   DateTime  @default(now()) @map("password_changed_at")
+  twoFactorEnabled    Boolean   @default(false) @map("two_factor_enabled")
+  twoFactorSecret     String?   @map("two_factor_secret")
+  deviceTokens        Json?     @map("device_tokens")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+  deletedAt           DateTime? @map("deleted_at")
+  firstName           String?   @map("first_name")
+  lastName            String?   @map("last_name")
+  phone               String?   @map("phone")
+  notificationSettings NotificationSettings? @relation("UserNotificationSettings")
+
+  // Relations
+  agent               Agent?
+  client              Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  clientId            String? @map("client_id")
+  apiKeys             ApiKey[]
+  sentMessages        Message[] @relation("MessageSender")
+  receivedMessages    Message[] @relation("MessageRecipient")
+  sentNotifications   Notification[] @relation("NotificationSender")
+  receivedNotifications Notification[] @relation("NotificationRecipient")
+  createdShifts       Shift[] @relation("ShiftCreator")
+  supervisedShifts    Shift[] @relation("ShiftSupervisor")
+  uploadedMedia       MediaFile[]
+  auditLogs           AuditLog[]
+  assignedRequests    ClientRequest[] @relation("RequestAssignee")
+  reviewedReports     Report[] @relation("ReportReviewer")
+  requestedTimeOff    TimeOffRequest[] @relation("TimeOffRequester")
+  approvedTimeOff     TimeOffRequest[] @relation("TimeOffApprover")
+  createdTemplates    ReportTemplate[] @relation("ReportTemplateCreator")
+  shiftAssignments    ShiftAssignment[] @relation("ShiftAssignedBy")
+  reportedIncidents   Incident[] @relation("IncidentReporter")
+  assignedIncidents   Incident[] @relation("IncidentAssignee")
+  incidentUpdates     IncidentUpdate[]
+  incidentAttachments IncidentAttachment[]
+  escalationsFrom     IncidentEscalation[] @relation("EscalationFrom")
+  escalationsTo       IncidentEscalation[] @relation("EscalationTo")
+  sentCommunications  Communication[] @relation("CommunicationSender")
+  receivedCommunications Communication[] @relation("CommunicationRecipient")
+  createdGroups       CommunicationGroup[]
+  groupMemberships    CommunicationGroupMember[]
+  createdTrainings    Training[]
+  enrolledTrainings   TrainingEnrollment[]
+  verifiedCertifications AgentCertification[]
+  skillAssessments    SkillAssessment[]
+  performanceReviews  PerformanceReview[]
+  approvedAttendance  AttendanceRecord[]
+  verifiedOnboarding  OnboardingCompletion[]
+
+  @@index([role])
+  @@index([status])
+  @@index([lastLoginAt])
+  @@index([createdAt])
+  @@map("users")
+}
+
+// Note: This is a partial schema. The complete schema includes additional models:
+// Agent, Client, Site, Shift, AttendanceRecord, Report, Incident, Communication,
+// Training, Certification, and many more models with their relationships.
+// Due to size constraints, please refer to the full schema in the repository.
